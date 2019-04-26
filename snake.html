@@ -1,0 +1,253 @@
+<html>
+
+<head>
+    <style>
+        body {
+            background: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+
+</head>
+
+<body>
+<canvas height="400" width="400" id="field" style="border: 1px solid white"></canvas>
+
+<h1 style="color: white;" id="points"></h1>
+
+<script>
+
+
+    // Timing
+    // ----------------------------------
+    var fps =20;
+    var now;
+    var then = Date.now();
+    var interval = 1000 / fps;
+    var delta;
+    // ----------------------------------
+
+    var activekey = randompos(37, 40);
+    var canInput = true;
+    var schlong = 4;
+
+
+    var canvas = document.getElementById('field');
+    var context = canvas.getContext('2d');
+    var grid = 16;
+    var count = 0;
+
+    var xsize = 15;
+    var ysize = xsize;
+
+    var counter = document.getElementById("points");
+    var points = 0;
+
+
+    var snake = {
+        x: 160,
+        y: 160,
+
+
+        // snake velocity. moves one grid length every frame in either the x or y direction
+        dx: grid,
+        dy: 0,
+
+        // keep track of all grids the snake body occupies
+        cells: [],
+
+
+        // length of the snake. grows when eating an apple
+        maxCells: schlong
+
+    };
+
+    var apple = {
+        x: 320,
+        y: 320
+    };
+
+    var colors = ["blue", "red", "green", "yellow", "purple", "fuchsia",];
+
+
+    function randompos(min, max) {
+        return Math.floor(Math.random() * (max - min)) + min;
+    }
+
+    function rand(items) {
+        return items[~~(items.length * Math.random())];
+    }
+
+    function reset(maxcells, snakex, snakey, applex, appley) {
+
+
+        return reset;
+
+    }
+
+    document.onkeyup = function (e) {
+
+        if (!canInput) {
+            return;
+        }
+        canInput = false;
+
+        switch (e.keyCode) {
+            //LEFT
+            case 37:
+
+                if (activekey !== 39) {
+
+
+                    activekey = 37;
+                }
+
+                break;
+            //UP
+            case 38:
+
+                if (activekey !== 40) {
+
+
+                    activekey = 38;
+                }
+
+
+                break;
+            //RIGHT
+            case 39:
+
+                if (activekey !== 37) {
+
+
+                    activekey = 39;
+                }
+
+
+                break;
+            //DOWN
+            case 40:
+                if (activekey !== 38) {
+
+
+                    activekey = 40;
+                }
+
+                break;
+        }
+    };
+
+    function loop() {
+        requestAnimationFrame(loop);
+        counter.innerText = points;
+        console.log(points);
+        // Timing
+        now = Date.now();
+        delta = now - then;
+        canInput = true;
+
+
+        if (delta > interval) {
+
+            //console.log('beep' + delta);
+
+
+
+            then = now - (delta % interval);
+
+            // Snake Action
+            // -------------------------------------------
+
+            snake.cells.unshift({x: snake.x, y: snake.y});
+
+            if (snake.cells.length > snake.maxCells) {
+                snake.cells.pop();
+            }
+
+            context.clearRect(0, 0, canvas.width, canvas.height);
+
+            //snake.dx += snake.dx;
+            //snake.y += snake.dy;
+
+
+            switch (activekey) {
+                //LEFT
+                case 37:
+                    snake.x -= snake.dx;
+                    snake.y -= snake.dy;
+                    break;
+                //UP
+                case 38:
+                    snake.x += 0;
+                    snake.y -= snake.dx;
+                    break;
+                //RIGHt
+                case 39:
+                    snake.x += snake.dx;
+                    snake.y += snake.dy;
+                    break;
+                //DOWN
+                case 40:
+                    snake.x += 0;
+                    snake.y += snake.dx;
+                    break;
+            }
+            //activekey = 0;
+
+            // Check if snake i
+            if (snake.x >= canvas.width) {
+                snake.x = 0;
+            }
+            else if (snake.x < 0) {
+                snake.x = canvas.width - grid;
+            }
+
+            if (snake.y >= canvas.height) {
+                snake.y = 0;
+            }
+            else if (snake.y < 0) {
+                snake.y = canvas.height - grid;
+            }
+
+            context.fillStyle = "red";
+            context.fillRect(apple.x, apple.y, grid, grid);
+
+            if (apple.x === snake.x && apple.y === snake.y) {
+                snake.maxCells += 1;
+                apple.x = randompos(0, 25) * grid;
+                apple.y = randompos(0, 25) * grid;
+
+                points++;
+            }
+
+
+            context.fillStyle = rand(colors);
+
+
+            snake.cells.forEach(function (cell, index) {
+
+                context.fillRect(cell.x, cell.y, grid - 1, grid - 1);
+
+                if (snake.x === cell.x && snake.y === cell.y) {
+                    points = 0;
+                    snake.cells.splice(0, snake.maxCells);
+                    snake.maxCells = schlong;
+                    snake.x = randompos(0, 25) * grid;
+                    snake.y = randompos(0, 25) * grid;
+                    apple.x = randompos(0, 25) * grid;
+                    apple.y = randompos(0, 25) * grid;
+                }
+            });
+
+
+            // -------------------------------------------
+        }
+    }
+
+    loop();
+
+</script>
+</body>
+</html>

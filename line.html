@@ -1,0 +1,323 @@
+<html>
+
+<head>
+    <style>
+        body {
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+
+</head>
+
+<body>
+<canvas height="1000" width="1000" id="field" style="border: 1px solid black"></canvas>
+
+<h1 style="color: white;" id="points"></h1>
+
+</body>
+</html>
+<script>
+
+
+    var canvas = document.getElementById('field');
+    var context = canvas.getContext('2d');
+    var p1_activekey = 37;
+    var p2_activekey = 68;
+    var p1_count = 0;
+    var p1_timer = 0;
+    var dodge1 = false;
+    var p2_count = 0;
+    var p2_timer = 0;
+    var dodge2 = false;
+
+
+    // Timing
+    // ----------------------------------
+    var fps = 20;
+    var now;
+    var then = Date.now();
+    var interval = 1000 / fps;
+    var delta;
+    // ----------------------------------
+
+
+    var grid = 10;
+    var speed = 8;
+
+
+    function rand(items) {
+        return items[~~(items.length * Math.random())];
+    }
+
+
+    var players = {
+        x1: 800,
+        y1: 900,
+
+        x2: 200,
+        y2: 100,
+
+        p1: [],
+        p2: [],
+
+
+        // snake velocity. moves one grid length every frame in either the x or y direction
+        dx: grid,
+        dy: 0,
+
+
+    };
+    document.onkeyup = function (e) {
+        switch (e.keyCode) {
+            //LEFT
+            case 37:
+
+                if (p1_activekey !== 39) {
+
+
+                    p1_activekey = 37;
+                }
+
+                break;
+            //UP
+            case 38:
+
+                if (p1_activekey !== 40) {
+
+
+                    p1_activekey = 38;
+                }
+
+
+                break;
+            //RIGHT
+            case 39:
+
+                if (p1_activekey !== 37) {
+
+
+                    p1_activekey = 39;
+                }
+
+
+                break;
+            //DOWN
+            case 40:
+                if (p1_activekey !== 38) {
+
+
+                    p1_activekey = 40;
+                }
+
+                break;
+
+            case 96:
+                if (p1_timer === 0) {
+                    if (p1_count < 5.65) {
+                        dodge1 = true;
+                        p1_timer = 1;
+
+                    }
+                }
+
+                break;
+        }
+
+
+        //PLAYER2
+
+        switch (e.keyCode) {
+            //LEFT
+            case 65:
+
+                if (p2_activekey !== 68) {
+
+
+                    p2_activekey = 65;
+                }
+
+                break;
+            //UP
+            case 87:
+
+                if (p2_activekey !== 83) {
+
+
+                    p2_activekey = 87;
+                }
+
+
+                break;
+            //RIGHT
+            case 68:
+
+                if (p2_activekey !== 65) {
+
+
+                    p2_activekey = 68;
+                }
+
+
+                break;
+            //DOWN
+            case 83:
+                if (p2_activekey !== 87) {
+
+
+                    p2_activekey = 83;
+                }
+
+                break;
+
+            case 32:
+                if (p2_timer === 0) {
+                    if (p2_count < 5.65) {
+                        dodge2 = true;
+                        p2_timer = 1;
+
+                    }
+                }
+
+                break;
+        }
+
+    };
+
+
+    function loop() {
+        requestAnimationFrame(loop);
+
+
+        if (dodge1 === false) {
+            context.fillStyle = "red";
+            context.fillRect(players.x1, players.y1, grid, grid);
+            players.p1.unshift({x: players.x1, y: players.y1});
+
+        }
+
+        if (p1_timer >= 1) {
+            p1_timer += 0.05;
+            if (dodge1 === true) {
+                p1_count += 0.5;
+
+                if (p1_count >= 5.65) {
+                    p1_count = 0;
+                    dodge1 = false;
+                }
+
+            }
+            if (p1_timer >= 5) {
+                console.log(p1_timer);
+                p1_timer = 0;
+            }
+        }
+        if (dodge2 === false) {
+            context.fillStyle = "blue";
+            context.fillRect(players.x2, players.y2, grid, grid);
+            players.p2.unshift({x: players.x2, y: players.y2});
+
+        }
+
+
+
+
+        if (p2_timer >= 1) {
+            p2_timer += 0.05;
+            if (dodge2 === true) {
+                p2_count += 0.5;
+
+                if (p2_count >= 5.65) {
+                    p2_count = 0;
+                    dodge2 = false;
+                }
+
+            }
+            if (p2_timer >= 5) {
+                console.log(p2_timer);
+                p2_timer = 0;
+            }
+        }
+
+
+        players.p1.forEach(function (cell, index) {
+
+
+
+if (dodge2 === false) {
+    if (players.x2 === cell.x && players.y2 === cell.y) {
+        alert("HIT");
+    }
+}
+        });
+
+
+        players.p2.forEach(function (cell, index) {
+
+
+            if (dodge1 === false) {
+                if (players.x1 === cell.x && players.y1 === cell.y) {
+                    alert("HIT");
+                }
+            }
+        });
+
+
+        switch (p1_activekey) {
+            //LEFT
+            case 37:
+                players.x1 -= speed;
+                players.y1 -= 0;
+                break;
+            //UP
+            case 38:
+                players.x1 += 0;
+                players.y1 -= speed;
+                break;
+            //RIGHT
+            case 39:
+                players.x1 += speed;
+                players.y1 += 0;
+                break;
+            //DOWN
+            case 40:
+                players.x1 += 0;
+                players.y1 += speed;
+                break;
+        }
+
+
+        switch (p2_activekey) {
+            //LEFT
+            case 65:
+                players.x2 -= speed;
+                players.y2 -= 0;
+                break;
+            //UP
+            case 87:
+                players.x2 += 0;
+                players.y2 -= speed;
+                break;
+            //RIGHT
+            case 68:
+                players.x2 += speed;
+                players.y2 += 0;
+                break;
+            //DOWN
+            case 83:
+                players.x2 += 0;
+                players.y2 += speed;
+                break;
+        }
+
+
+    }
+
+
+    loop();
+    console.log(context);
+
+
+</script>

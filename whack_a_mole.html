@@ -1,0 +1,215 @@
+<html>
+<head>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+            crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <style>
+        .hole {
+
+            border: 1px solid black;
+            width: 200px;
+            height: 200px;
+            float: left;
+            background: url(hole1.jpg);
+            background-size: cover;
+            position: relative;
+            z-index: 1;
+        }
+
+        .mole {
+
+            border: 1px solid black;
+            width: 200px;
+            height: 200px;
+            background: url(mole1.jpg);
+            background-size: cover;
+            position: absolute;
+            z-index: 2;
+
+        }
+
+        .clickable {
+
+        }
+
+        @keyframes rotating {
+            from {
+                -ms-transform: rotate(0deg);
+                -moz-transform: rotate(0deg);
+                -webkit-transform: rotate(0deg);
+                -o-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+            to {
+                -ms-transform: rotate(360deg);
+                -moz-transform: rotate(360deg);
+                -webkit-transform: rotate(360deg);
+                -o-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+        .rotating {
+            -webkit-animation: rotating 2s linear infinite;
+            -moz-animation: rotating 2s linear infinite;
+            -ms-animation: rotating 2s linear infinite;
+            -o-animation: rotating 2s linear infinite;
+            animation: rotating 2s linear infinite;
+        }
+
+    </style>
+
+    <script>
+        class Game {
+            constructor(numberOfHoles) {
+                this.easterEggPoints = [12,];
+                this.bgBrightnessActive = -15;
+                this.bgBrightnessStep = 17;
+                this.bgBrightness = 255;
+                this.interval = null;
+                this.speed = 1000;
+                this.hole = 0;
+                this.mole = null;
+                this.numberOfHoles = numberOfHoles;
+                this.moleImages = ['mole1.jpg', 'mole2.jpg'];
+                this.points = 0;
+
+
+            }
+
+            randomHole() {
+                this.hole = $('#h' + Math.floor(Math.random() * Math.floor(this.numberOfHoles)));
+            }
+
+            randomMole() {
+                this.mole.css({
+                    'background-image': "url(" + this.moleImages[Math.floor(this.moleImages.length * Math.random())] + ")"
+                })
+            }
+
+            digHoles() {
+                for (var i = 0; i < this.numberOfHoles; i++) {
+                    document.write('<div class="hole clickable" id="h' + i + '"></div>')
+                }
+                document.write('<div class="mole clickable" id="m1"></div>')
+                this.mole = $('#m1');
+            }
+
+            die() {
+
+                document.body.style.backgroundColor = "rgba(" + (this.bgBrightness) + " ," + (this.bgBrightness) + " ," + (this.bgBrightness) + ", 1)";
+            }
+
+
+            drawMole() {
+                this.mole.css(
+                    {
+                        left: this.hole.position().left,
+                        top: this.hole.position().top,
+                    }
+                );
+                this.mole.top = this.hole.top;
+                this.randomMole();
+            }
+
+            main() {
+                console.info('main');
+                this.randomHole();
+                this.drawMole();
+
+            }
+
+            easterEggs() {
+                if (this.points === this.easterEggPoints[0]) {
+                    //document.body.style.transform = "rotate(175deg)";
+                    $('div.container').addClass('rotating')
+                }
+                else{
+                   // document.body.style.transform = "rotate(0deg)";
+                    $('div.container').removeClass('rotating')
+                }
+
+
+
+            }
+
+            whack(e) {
+
+
+                if (e.target.className === 'mole clickable') {
+                    console.info(e.target.className);
+                    this.points++;
+
+
+                }
+                else {
+                    this.points--;
+
+
+                    if (this.points < this.bgBrightnessActive) {
+                        this.bgBrightness -= this.bgBrightnessStep;
+                    }
+
+                }
+                document.getElementById("points").innerHTML = this.points;
+                this.easterEggs();
+                this.die();
+
+            }
+
+            start() {
+
+                var self = this;
+                this.interval = setInterval(function () {
+                    self.main()
+                }, this.speed);
+
+                $('.clickable').on('click', function (e) {
+                    self.whack(e)
+                });
+
+                $(document).on('click', '.stop', function () {
+                    self.stop()
+                });
+            }
+
+            stop() {
+                console.error('STOP');
+                clearInterval(this.interval)
+            }
+        }
+    </script>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+    <div class="row">
+        <div class="col-7">
+            <script>
+                var game = new Game(9);
+                game.digHoles();
+                game.start();
+
+
+            </script>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <button class="stop">STOP EATING ANIMALS!</button>
+            <h1 id="points"></h1>
+        </div>
+    </div>
+</div>
+
+</body>
+
+</html>
