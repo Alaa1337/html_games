@@ -66,7 +66,13 @@
     <script>
         class Game {
             constructor(numberOfHoles) {
-                this.easterEggPoints = [12,];
+                this.easterEggPoints = {
+                    spin:12,
+                    scary1:-25,
+                    happy:23,
+
+
+                };
                 this.bgBrightnessActive = -15;
                 this.bgBrightnessStep = 17;
                 this.bgBrightness = 255;
@@ -124,7 +130,7 @@
             }
 
             easterEggs() {
-                if (this.points === this.easterEggPoints[0]) {
+                if (this.points === this.easterEggPoints.spin) {
                     //document.body.style.transform = "rotate(175deg)";
                     $('div.container').addClass('rotating')
                 }
@@ -134,6 +140,20 @@
                 }
 
 
+                if (this.points > this.easterEggPoints.happy){
+                    this.moleImages = ['happy_moles/happy_mole1.jpg', 'happy_moles/happy_mole2.jpg'];
+                }
+                else{
+                    this.moleImages = ['mole1.jpg', 'mole2.jpg'];
+                }
+
+
+                if (this.points < this.easterEggPoints.scary1){
+                    this.moleImages = ['scary_moles/scary_mole1.jpg', 'scary_moles/scary_mole2.jpg'];
+                }
+                else{
+                    this.moleImages = ['mole1.jpg', 'mole2.jpg'];
+                }
 
             }
 

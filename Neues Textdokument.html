@@ -1,0 +1,555 @@
+<html>
+
+<head>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+            crossorigin="anonymous"></script>
+
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <style>
+
+        .stats {
+
+            font-family: arial;
+            font-weight: bold;
+
+        }
+
+        body {
+            background-color: lemonchiffon;
+        }
+
+        .box {
+            border: 1px solid black;
+            background-color: white;
+            position: fixed;
+            margin-left: 200px;
+            padding-right: 50px;
+            display: block;
+            z-index: 1;
+        }
+
+        .blueArmy {
+            background-color: blue;
+            color: white;
+            font-family: arial;
+            font-size: 45px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 2;
+        }
+
+        .redArmy {
+            background-color: red;
+            color: white;
+            font-family: arial;
+            font-size: 45px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 2;
+        }
+    </style>
+
+    <script>
+
+
+        function randompos(min, max) {
+            //console.log(min+':'+max+':'+(Math.floor(Math.random() * (max - min)) + min))
+            return Math.floor(Math.random() * (max - min)) + min;
+        }
+
+        function rand(items) {
+            return items[~~(items.length * Math.random())];
+        }
+
+        class Entity {
+            constructor(id, x, y, health, color) {
+                this.id = id;
+                this.x = x;
+                this.y = y;
+                this.bleed = false;
+                this.health = health;
+                this.color = '#ff0000';
+                if (color) {
+                    this.color = color;
+                }
+            }
+        }
+
+        class Game {
+            constructor() {
+
+                this.maxRows = 7;
+                this.maxBoxes = this.maxRows * this.maxRows;
+                this.boxesPerRow = this.maxBoxes / this.maxRows;
+                this.boxCounter = 0;
+                this.redArmyCounter = 0;
+                this.boxHeight = 100;
+                this.boxWidth = this.boxHeight;
+                this.boxMargin = 5;
+
+                this.blueSurvival = 0;
+                this.redSurvival = 0;
+
+                this.box = 1;
+                this.x = 0;
+                this.y = 0;
+                //this.random = randompos(0,this.maxRows);
+
+                this.redArmy = [];
+                this.blueArmy = [];
+
+                // Kräfteverhältnis vermitteln
+                this.redArmyPower = [3, 1, 1, 1, 1];
+                this.blueArmyPower = [1, 2, 1, 3];
+
+
+                var that = this;
+                for (let t = 0; t < this.redArmyPower.length; t++) {
+
+                    let checking = true;
+                    let random = randompos(0, this.maxRows);
+
+                    while (checking) {
+                        let found = false;
+                        this.redArmy.forEach(function (armyObject) {
+                            if (armyObject.y === random * that.boxHeight) {
+                                found = true;
+                            }
+                        });
+                        if (found === false) {
+                            checking = false;
+                        } else {
+                            random = randompos(0, that.maxRows);
+                        }
+                    }
+
+                    this.redArmy.push(new Entity
+                        (
+                            'red' + t,
+                            0,
+                            random * this.boxHeight,
+                            this.redArmyPower[t]
+                        )
+                    )
+
+                }
+
+                for (let t = 0; t < this.blueArmyPower.length; t++) {
+
+                    let checking = true;
+                    let random = randompos(0, this.maxRows);
+
+                    while (checking) {
+                        let found = false;
+                        this.blueArmy.forEach(function (armyObject) {
+                            if (armyObject.y === random * that.boxHeight) {
+                                found = true;
+                            }
+                        });
+                        if (found === false) {
+                            checking = false;
+                        } else {
+                            random = randompos(0, that.maxRows);
+                        }
+                    }
+
+                    this.blueArmy.push(new Entity
+                        (
+                            'blue' + t,
+                            this.boxHeight * (this.maxRows - 1),
+                            random * this.boxHeight,
+                            this.blueArmyPower[t]
+                        )
+                    )
+
+                }
+
+
+                var that = this;
+                let count = 0;
+
+                $(document).on('click', '#actionButton', function () {
+                    count++
+                    that.readStats();
+                    that.fight();
+                    that.hit();
+                    that.bleeding();
+
+
+                    if (count === that.maxRows - 1) {
+                        that.stopGame();
+                    }
+
+
+                    //console.log(randompos(0,that.maxRows));
+                });
+
+
+            }
+
+            drawArmy(army, className) {
+
+                let that = this;
+
+                $('.' + className).remove();
+                army.forEach(function (armyObject, index) {
+                    that.myBox(armyObject.id, armyObject.x, armyObject.y, className, armyObject.health)
+                });
+
+            }
+
+            stopGame() {
+                $('#actionButton').attr('disabled', 'disabled');
+            }
+
+            readStats() {
+                let that = this;
+                let redHealth = 0;
+                let redSurvivors = 0;
+                let blueHealth = 0;
+                let blueSurvivors = 0;
+                this.redArmy.forEach(function (armyObject, index) {
+
+                    if (armyObject.health < 0) {
+                        armyObject.health = 0;
+                    }
+
+
+                    redHealth += armyObject.health;
+
+
+                    if (armyObject.health > 0) {
+
+                        redSurvivors += 1;
+
+                        if (armyObject.health <= 0) {
+                            redSurvivors -= 1;
+                        }
+
+
+                    }
+
+                    $('#' + armyObject.id).text(armyObject.health);
+
+                });
+
+                this.blueArmy.forEach(function (armyObject, index) {
+
+                    if (armyObject.health < 0) {
+                        armyObject.health = 0;
+                    }
+
+
+                    blueHealth += armyObject.health;
+
+
+                    if (armyObject.health > 0) {
+
+                        blueSurvivors += 1;
+
+                        if (armyObject.health <= 0) {
+                            blueSurvivors -= 1;
+                        }
+
+
+                    }
+                    $('#' + armyObject.id).text(armyObject.health);
+
+                });
+
+
+                this.blueSurvival = blueHealth / 2;
+                this.redSurvival = redHealth / 2;
+
+                $('#blueHealth').text('Blue Army health: ' + blueHealth);
+                $('#blueSurvivors').text('Blue Army Survivors: ' + blueSurvivors);
+
+                $('#redHealth').text('Red Army health: ' + redHealth);
+                $('#redSurvivors').text('Red Army Survivors: ' + redSurvivors);
+
+
+            }
+
+
+            fight() {
+                let that = this;
+
+
+                // Red moves
+                this.redArmy.forEach(function (armyObject, index) {
+                    //that.redArmy[index].x += that.boxWidth;
+                    armyObject.x += that.boxWidth;
+                    $('#' + armyObject.id).css('left', armyObject.x + 'px');
+                    // console.log(armyObject.health);
+                   // console.log("RED", armyObject);
+
+                });
+                this.blueArmy.forEach(function (armyObject, index) {
+                    //that.redArmy[index].x += that.boxWidth;
+                    armyObject.x -= that.boxWidth;
+                    $('#' + armyObject.id).css('left', armyObject.x + 'px');
+                    //console.log("BLUE", armyObject);
+
+
+                });
+
+
+            }
+
+            bleeding() {
+
+                let that = this;
+                this.redArmy.forEach(function (redarmyObject, index1) {
+
+                    console.log(redarmyObject.health)
+
+                    if (redarmyObject.bleed === true) {
+                        redarmyObject.health -= 0.15;
+                    }
+
+                    console.log(redarmyObject.health, "-------------")
+
+                });
+
+                that.blueArmy.forEach(function (bluearmyObject, index) {
+
+                    if (bluearmyObject.bleed === true) {
+                        bluearmyObject.health -= 0.15;
+                    }
+
+
+                });
+
+
+            }
+
+
+            hit() {
+
+                let that = this;
+                let health = 0;
+                let random = 0;
+                let critikalStrike = [0.10, 0.25, 0.40, 0.50, 0.75];
+                this.redArmy.forEach(function (redarmyObject, index1) {
+
+
+                    that.blueArmy.forEach(function (bluearmyObject, index) {
+                        if (redarmyObject.x === bluearmyObject.x && redarmyObject.y === bluearmyObject.y) {
+                            if (redarmyObject.health > bluearmyObject.health) {
+                                health = redarmyObject.health;
+
+
+                                redarmyObject.health -= 1;
+                                bluearmyObject.health -= 1;
+                                //CRITICAL STRIKE CHANCE
+                                random = randompos(0, 100);
+                                if (random > 15) {
+                                    bluearmyObject.health -= rand(critikalStrike);
+
+                                }
+                                random = randompos(0, 100);
+                                if (random > 15) {
+                                    redarmyObject.health -= rand(critikalStrike);
+
+                                }
+                                //BLEEDING EFFEKT
+                                random = randompos(0, 100);
+                                if (random > 1) {
+                                    bluearmyObject.bleed = true;
+
+                                }
+                                random = randompos(0, 100);
+                                if (random > 1) {
+                                    redarmyObject.bleed = true;
+
+                                }
+
+
+                            }
+                            else if (redarmyObject.health < bluearmyObject.health) {
+                                health = bluearmyObject.health;
+
+
+                                bluearmyObject.health -= 1;
+                                redarmyObject.health -= 1;
+                                random = randompos(0, 100);
+
+                                if (random > 15) {
+                                    bluearmyObject.health -= rand(critikalStrike);
+
+                                }
+                                random = randompos(0, 100);
+
+                                if (random > 15) {
+                                    redarmyObject.health -= rand(critikalStrike);
+
+                                }
+
+                                //BLEEDING EFFEKT
+                                random = randompos(0, 100);
+                                if (random > 1) {
+                                    bluearmyObject.bleed = true;
+
+                                }
+                                random = randompos(0, 100);
+                                if (random > 1) {
+                                    redarmyObject.bleed = true;
+
+                                }
+                            }
+                            else if (redarmyObject.health === bluearmyObject.health) {
+                                health = bluearmyObject.health;
+
+                                bluearmyObject.health -= 1;
+                                redarmyObject.health -= 1;
+
+                                random = randompos(0, 100);
+
+                                if (random > 15) {
+                                    bluearmyObject.health -= rand(critikalStrike);
+
+                                }
+                                random = randompos(0, 100);
+
+                                if (random > 15) {
+                                    redarmyObject.health -= rand(critikalStrike);
+
+                                }
+
+                                //BLEEDING EFFEKT
+                                random = randompos(0, 100);
+                                if (random > 1) {
+                                    bluearmyObject.bleed = true;
+
+                                }
+                                random = randompos(0, 100);
+                                if (random > 1) {
+                                    redarmyObject.bleed = true;
+
+                                }
+
+                            }
+
+                            if (redarmyObject.health <= 0) {
+                                $('#' + redarmyObject.id).remove();
+                            }
+                            if (bluearmyObject.health <= 0) {
+                                $('#' + bluearmyObject.id).remove();
+                            }
+
+
+                        }
+
+
+                    });
+
+
+                });
+            }
+
+            main() {
+                this.drawBox();
+                this.drawArmy(this.redArmy, 'redArmy')
+                this.drawArmy(this.blueArmy, 'blueArmy')
+
+            }
+
+            myBox(boxId, x, y, className, strength = '') {
+                document.write('<div id="' + boxId + '" class=" box ' + className + '" style="left:' + x + 'px;top:' + y + 'px;width:' + this.boxWidth + 'px;height:' + this.boxHeight + 'px;">' + strength + '</div>');
+            }
+
+            drawBox() {
+                for (this.box = 1; this.box <= this.maxBoxes; this.box = this.box + 1) {
+
+                    this.boxCounter = this.boxCounter + 1;
+                    this.x = (this.boxCounter - 1) * this.boxWidth;
+
+
+                    // Debug
+                    //console.log('X:' + this.x);
+
+                    // Box zeichnen
+                    this.myBox('box' + this.box, this.x, this.y, '',);
+
+                    // Zeilenumbruch
+                    if (this.boxCounter >= this.boxesPerRow) {
+                        this.boxCounter = 0;
+                        this.x = 0;
+                        this.y = this.y + this.boxHeight;
+                    }
+                }
+            }
+
+            /*
+                        RedArmyDraw() {
+                            for (this.boxCounter = 1; this.boxCounter <= this.maxBoxes; this.boxCounter++) {
+
+                                if (this.boxCounter % this.maxRows === 1) {
+                                    console.log("ree");
+                                    document.getElementById('box' + this.boxCounter).style.backgroundColor = "red";
+                                }
+
+                            }
+
+
+                        }
+
+                        BlueArmyDraw() {
+                            for (this.boxCounter = 1; this.boxCounter <= this.maxBoxes; this.boxCounter++) {
+
+                                if (this.boxCounter % this.maxRows === 0) {
+                                    console.log("ree");
+                                    document.getElementById('box' + this.boxCounter).style.backgroundColor = "blue";
+                                    $('#box' + this.boxCounter).addClass('blueBox');
+                                }
+
+                            }
+
+
+                        }
+                        */
+
+        }
+
+
+    </script>
+
+
+</head>
+
+<body>
+
+
+<h1 style="color: white;" id="points"></h1>
+
+<script>
+    var game = new Game();
+    game.main();
+    //game.RedArmyDraw();
+    //game.BlueArmyDraw();
+
+    $(function () {
+        $('#actionButton').focus();
+    });
+
+</script>
+</div>
+<form>
+    <input id="actionButton" type="button" style="position:absolute;right:50%;" value="en garde!">
+</form>
+<div id="redHealth" class="stats" style="position:absolute; margin-top:700px ">Red Army health:</div>
+<div id="redSurvivors" class="stats" style="position:absolute; margin-top:730px ">Red Army survivors:</div>
+
+<div id="blueHealth" class="stats" style="position:absolute; margin-top:700px;margin-left:550px ">Blue Army
+    health:
+</div>
+<div id="blueSurvivors" class="stats" style="position:absolute; margin-top:730px;margin-left:550px ">Blue Army
+    survivors:
+</div>
+
+</body>
+</html>
+
